@@ -607,7 +607,7 @@ export const Reservation = () => {
                  </div>
                  <div>
                    <p className="micro-label !text-white/30 mb-1">Priority Line</p>
-                   <p className="text-sm tracking-widest">+27 21 000 0000</p>
+                   <p className="text-sm tracking-widest">+27 84 692 9334</p>
                  </div>
                </div>
                <div className="flex items-center gap-6">
@@ -650,7 +650,7 @@ export const Footer = () => {
                <div>
                   <h4 className="micro-label mb-6 opacity-30">Direct Link</h4>
                   <p className="text-[11px] text-white/50 leading-loose uppercase tracking-[0.4em]">
-                    +27 21 000 0000<br />
+                    +27 84 692 9334<br />
                     concierge@quattrocape.com
                   </p>
                </div>
