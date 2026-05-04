@@ -673,7 +673,7 @@ export const Footer = () => {
                 "We don't just provide transport; we facilitate the most important resource of all: <span className="text-white italic">Time</span>."
               </p>
               <div className="flex flex-wrap gap-6 lg:justify-end">
-                <a href="https://wa.me/27123456789" className="btn-gold !px-12 !py-6 text-sm">
+                <a href="https://wa.me/27846929334" className="btn-gold !px-12 !py-6 text-sm">
                   WhatsApp Concierge
                 </a>
                 <Link 
