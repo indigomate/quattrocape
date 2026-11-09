@@ -1,121 +1,131 @@
-import { Link, useParams } from 'react-router-dom';
-import { ArrowUpRight } from 'lucide-react';
-import { Navbar, Footer } from '../components/LandingPage';
-import { Seo } from '../components/Seo';
-
-type ServiceContent = {
-  title: string;
-  subtitle: string;
-  description: string;
-  image: string;
-  alt: string;
-  price: string;
-  path: string;
-};
-
-const SERVICE_MAP: Record<string, ServiceContent> = {
-  'airport-transfers': {
-    title: 'Airport Transfers',
-    subtitle: 'Arrivals & Departures',
-    description:
-      'Private luxury airport transfers in Cape Town with professional meet-and-greet service, precise scheduling, and discreet executive transport.',
-    image: '/images/services/airport-transfers.png',
-    alt: 'Premium airport arrivals and departures hall for chauffeur transfer services',
-    price: 'From €90',
-    path: '/airport-transfers',
-  },
-  'private-day-tours': {
-    title: 'Private Day Tours',
-    subtitle: 'Curated Exploration',
-    description:
-      'Bespoke chauffeured day tours across Cape Town, from coastal drives to wine routes, with tailored itineraries and refined comfort.',
-    image: '/images/services/private-day-tours.png',
-    alt: 'Scenic coastal route in Cape Town for a private day tour',
-    price: 'From €200',
-    path: '/private-day-tours',
-  },
-  'stay-chauffeur': {
-    title: 'Stay Chauffeur',
-    subtitle: 'Full Residency',
-    description:
-      'Dedicated private chauffeur service for the duration of your stay, offering seamless daily mobility and premium executive comfort.',
-    image: '/images/services/stay-chauffeur.png',
-    alt: 'Luxury vehicle interior for full-stay chauffeur service',
-    price: 'From €700',
-    path: '/stay-chauffeur',
-  },
-};
-
+import { Link, useLocation } from "react-router-dom";
+import { ArrowUpRight, Check } from "lucide-react";
+import { Navbar, Footer, FAQ } from "../components/LandingPage";
+import { BookingForm } from "../components/BookingForm";
+import { Seo } from "../components/Seo";
+import { services, ServiceSlug, structuredData } from "../lib/content";
 export default function ServicePage() {
-  const { slug } = useParams<{ slug: string }>();
-  const service = slug ? SERVICE_MAP[slug] : undefined;
-
-  if (!service) {
-    return (
-      <main className="min-h-screen bg-luxury-black text-white">
-        <Navbar />
-        <section className="py-40 px-6 text-center">
-          <h1 className="text-5xl">Service not found</h1>
-          <Link to="/" className="btn-gold mt-10 inline-flex">
-            Return Home
-          </Link>
-        </section>
-        <Footer />
-      </main>
-    );
-  }
-
-  const seoTitle = `${service.title} | QuattroCape Chauffeur Cape Town`;
-  const seoDescription = `${service.description} ${service.price}.`;
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Service',
-    name: service.title,
-    description: service.description,
-    provider: {
-      '@type': 'LocalBusiness',
-      name: 'QuattroCape',
-      areaServed: 'Cape Town',
-    },
-    areaServed: 'Cape Town',
-    offers: {
-      '@type': 'Offer',
-      priceCurrency: 'EUR',
-      description: service.price,
-    },
-  };
-
+  const { pathname } = useLocation();
+  const slug = pathname.slice(1) as ServiceSlug;
+  const service = services[slug];
+  if (!service) return null;
   return (
-    <main className="min-h-screen bg-luxury-black text-white">
-      <Seo title={seoTitle} description={seoDescription} path={service.path} jsonLd={jsonLd} />
+    <>
+      <Seo
+        title={service.title}
+        description={service.description}
+        path={pathname}
+        image={service.image}
+        jsonLd={structuredData(slug)}
+      />
       <Navbar />
-
-      <section className="py-28 md:py-40 border-b border-white/5">
-        <div className="max-w-[1200px] mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
-          <div>
-            <span className="micro-label opacity-50 block mb-6">{service.subtitle}</span>
-            <h1 className="text-[clamp(2.4rem,7vw,5.5rem)] leading-[0.9] font-display font-light mb-8">
-              {service.title}
-            </h1>
-            <p className="text-white/60 text-lg leading-relaxed mb-10">{service.description}</p>
-            <div className="flex flex-wrap items-center gap-6">
-              <span className="micro-label !text-white/70 border border-white/10 px-4 py-2 rounded-full">
-                {service.price}
-              </span>
-              <a href="/#reserve" className="btn-gold">
-                Reserve This Service <ArrowUpRight size={14} />
+      <main id="main-content">
+        <section className="service-hero shell">
+          <nav className="breadcrumbs" aria-label="Breadcrumb">
+            <Link to="/">Home</Link>
+            <span>/</span>
+            <span>{service.label}</span>
+          </nav>
+          <div className="service-hero-grid">
+            <div>
+              <span className="eyebrow">{service.eyebrow}</span>
+              <h1>{service.heading}</h1>
+              <p>{service.intro}</p>
+              <div className="service-price">
+                R{service.price.toLocaleString("en-ZA")}{" "}
+                <span>{service.unit} · chauffeur included</span>
+              </div>
+              <a href="#reserve" className="button">
+                Request {service.name.toLowerCase()} <ArrowUpRight size={17} />
               </a>
             </div>
+            <img
+              src={service.image}
+              alt={service.alt}
+              width="1536"
+              height="1024"
+              fetchPriority="high"
+            />
           </div>
-
-          <div className="relative overflow-hidden rounded-xs border border-white/10 bg-white/[0.02]">
-            <img src={service.image} alt={service.alt} className="w-full h-[520px] object-cover" loading="eager" />
+        </section>
+        <section className="included-band">
+          <div className="shell">
+            <span className="eyebrow">YOUR PRIVATE JOURNEY INCLUDES</span>
+            <ul>
+              {service.includes.map((item) => (
+                <li key={item}>
+                  <Check size={19} />
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-      </section>
-
+        </section>
+        <section className="section shell">
+          <div className="section-heading">
+            <div>
+              <span className="eyebrow">MAKE IT YOUR EXPERIENCE</span>
+              <h2>
+                {slug === "airport-transfers"
+                  ? "A better beginning."
+                  : "A day worth remembering."}
+              </h2>
+            </div>
+            <p>
+              {slug === "airport-transfers"
+                ? "Arrive with a plan, and a journey that feels personal from the start."
+                : "These are itinerary ideas. We agree your final route and timing together."}
+            </p>
+          </div>
+          <div className="steps service-details">
+            {service.details.map(([h, p], i) => (
+              <article key={h}>
+                <span className="step-number">0{i + 1}</span>
+                <h3>{h}</h3>
+                <p>{p}</p>
+              </article>
+            ))}
+          </div>
+          <p className="pricing-note">
+            {slug === "private-day-tours"
+              ? "R5,000 covers the chauffeur and vehicle for your agreed day. Meals, entrance fees, wine tastings, and other third-party experiences are separate unless expressly agreed. Confirm tour hours and any extras before booking."
+              : "R1,000 per airport pickup. Confirm your destination, arrival time, waiting arrangements, passengers, and luggage before booking."}
+          </p>
+        </section>
+        <FAQ />
+        <section id="reserve" className="reservation section">
+          <div className="shell reservation-grid">
+            <div>
+              <span className="eyebrow">LET’S PLAN IT</span>
+              <h2>
+                {slug === "airport-transfers"
+                  ? "Your arrival, taken care of."
+                  : "Your perfect day starts here."}
+              </h2>
+              <p>
+                Tell us your dates and a little about your plans. We’ll check
+                availability and work through the details with you.
+              </p>
+              <Link
+                className="text-link"
+                to={
+                  slug === "airport-transfers"
+                    ? "/private-day-tours"
+                    : "/airport-transfers"
+                }
+              >
+                Explore{" "}
+                {slug === "airport-transfers"
+                  ? "our daily tours"
+                  : "airport pickups"}{" "}
+                <ArrowUpRight size={17} />
+              </Link>
+            </div>
+            <BookingForm initialService={slug} />
+          </div>
+        </section>
+      </main>
       <Footer />
-    </main>
+    </>
   );
 }
-

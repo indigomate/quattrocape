@@ -1,82 +1,81 @@
-import React, { Suspense, lazy, useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { getSupabase } from './lib/supabase';
-import { Session } from '@supabase/supabase-js';
+import React, { Suspense, lazy, useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { homeMeta, structuredData } from "./lib/content";
+import { getSupabase } from "./lib/supabase";
+import { Session } from "@supabase/supabase-js";
 
 // Views
-import { Navbar, Hero, Services, Experience, Pricing, WhyChooseUs, Reservation, Footer } from './components/LandingPage';
-import { Seo } from './components/Seo';
+import {
+  Navbar,
+  Hero,
+  Services,
+  Experience,
+  Pricing,
+  WhyChooseUs,
+  Reservation,
+  Footer,
+} from "./components/LandingPage";
+import { Seo } from "./components/Seo";
 
-const AdminPortal = lazy(() => import('./components/AdminPortal'));
-const LoginPortal = lazy(() => import('./components/LoginPortal'));
-const ServicePage = lazy(() => import('./pages/ServicePage'));
-const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
-const TermsPage = lazy(() => import('./pages/TermsPage'));
+const AdminPortal = lazy(() => import("./components/AdminPortal"));
+const LoginPortal = lazy(() => import("./components/LoginPortal"));
+const ServicePage = lazy(() => import("./pages/ServicePage"));
+const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
+const TermsPage = lazy(() => import("./pages/TermsPage"));
 
-function LandingView() {
-  const homeJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
-    name: 'QuattroCape',
-    areaServed: 'Cape Town',
-    url: 'https://quattrocape.com/',
-    telephone: '+27 21 000 0000',
-    email: 'concierge@quattrocape.com',
-  };
-
+export function LandingView() {
   return (
-    <main className="min-h-screen">
+    <>
       <Seo
-        title="QuattroCape | Private Chauffeur Services in Cape Town"
-        description="Luxury airport transfers, curated private day tours, and full-stay chauffeur services in Cape Town."
+        title={homeMeta.title}
+        description={homeMeta.description}
         path="/"
-        jsonLd={homeJsonLd}
+        jsonLd={structuredData()}
       />
       <Navbar />
-      <Hero />
-      <Services />
-      <Experience />
-      <Pricing />
-      <WhyChooseUs />
-      <Reservation />
+      <main id="main-content">
+        <Hero />
+        <Services />
+        <Experience />
+        <Pricing />
+        <WhyChooseUs />
+        <Reservation />
+      </main>
       <Footer />
-    </main>
+    </>
   );
 }
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
     const supabase = getSupabase();
-    
+
     if (!supabase) {
-      setLoading(false);
+      setAuthReady(true);
       return;
     }
 
-    // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
+    // Authentication must never block the public marketing pages.
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+      })
+      .catch(() => setSession(null))
+      .finally(() => setAuthReady(true));
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
 
     return () => subscription.unsubscribe();
   }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-luxury-black flex items-center justify-center">
-        <div className="w-12 h-12 border-2 border-luxury-gold/20 border-t-luxury-gold rounded-full animate-spin" />
-      </div>
-    );
-  }
 
   return (
     <BrowserRouter>
@@ -91,18 +90,56 @@ export default function App() {
           <Route path="/" element={<LandingView />} />
           <Route path="/airport-transfers" element={<ServicePage />} />
           <Route path="/private-day-tours" element={<ServicePage />} />
-          <Route path="/stay-chauffeur" element={<ServicePage />} />
+          <Route
+            path="/stay-chauffeur"
+            element={<Navigate to="/private-day-tours" replace />}
+          />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route
             path="/admin"
-            element={session ? <AdminPortal /> : <Navigate to="/login" replace />}
+            element={
+              !authReady ? (
+                <p role="status">Checking staff access…</p>
+              ) : session ? (
+                <AdminPortal />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
           />
           <Route
             path="/login"
-            element={!session ? <LoginPortal /> : <Navigate to="/admin" replace />}
+            element={
+              !authReady ? (
+                <p role="status">Checking staff access…</p>
+              ) : !session ? (
+                <LoginPortal />
+              ) : (
+                <Navigate to="/admin" replace />
+              )
+            }
           />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route
+            path="*"
+            element={
+              <>
+                <Seo
+                  title="Page not found | QuattroCape"
+                  description="This page could not be found."
+                  noindex
+                />
+                <Navbar />
+                <main id="main-content" className="section shell">
+                  <h1>Page not found</h1>
+                  <a href="/" className="text-link">
+                    Return to QuattroCape
+                  </a>
+                </main>
+                <Footer />
+              </>
+            }
+          />
         </Routes>
       </Suspense>
     </BrowserRouter>

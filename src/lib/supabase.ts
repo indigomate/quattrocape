@@ -1,15 +1,21 @@
-import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
+import { createClient, SupabaseClient, User } from "@supabase/supabase-js";
 
 let supabaseInstance: SupabaseClient | null = null;
 
 export function getSupabase() {
   if (supabaseInstance) return supabaseInstance;
 
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://eobzmqrkvpnbfyjkdlhf.supabase.co';
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_5l4mfA_mwB90jYd56P0-1w_oCEwlpb-';
+  const supabaseUrl =
+    import.meta.env.VITE_SUPABASE_URL ||
+    "https://eobzmqrkvpnbfyjkdlhf.supabase.co";
+  const supabaseAnonKey =
+    import.meta.env.VITE_SUPABASE_ANON_KEY ||
+    "sb_publishable_5l4mfA_mwB90jYd56P0-1w_oCEwlpb-";
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('Supabase configuration missing. Database features will be disabled. Please ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in your environment.');
+    console.warn(
+      "Supabase configuration missing. Database features will be disabled. Please ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in your environment.",
+    );
     return null;
   }
 
@@ -30,7 +36,7 @@ export type LeadSubmission = {
  */
 export async function addLead(data: LeadSubmission): Promise<void> {
   const supabase = getSupabase();
-  if (!supabase) throw new Error('Supabase configuration missing');
+  if (!supabase) throw new Error("Supabase configuration missing");
 
   const payload = {
     name: data.name.trim(),
@@ -39,10 +45,10 @@ export async function addLead(data: LeadSubmission): Promise<void> {
     message: data.message,
   };
 
-  const { error } = await supabase.from('leads').insert([payload]);
+  const { error } = await supabase.from("leads").insert([payload]);
 
   if (error) {
-    console.error('Supabase error:', error);
+    console.error("Supabase error:", error);
     throw error;
   }
 }
@@ -52,15 +58,15 @@ export async function addLead(data: LeadSubmission): Promise<void> {
  */
 export async function getLeads() {
   const supabase = getSupabase();
-  if (!supabase) throw new Error('Supabase configuration missing');
+  if (!supabase) throw new Error("Supabase configuration missing");
 
   const { data, error } = await supabase
-    .from('leads')
-    .select('*')
-    .order('created_at', { ascending: false });
+    .from("leads")
+    .select("*")
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error('Supabase error fetching leads:', error);
+    console.error("Supabase error fetching leads:", error);
     throw error;
   }
 
@@ -72,12 +78,13 @@ export async function getLeads() {
  */
 export async function signIn(email: string) {
   const supabase = getSupabase();
-  if (!supabase) throw new Error('Supabase configuration missing');
+  if (!supabase) throw new Error("Supabase configuration missing");
 
   const { data, error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: window.location.origin,
+      emailRedirectTo: window.location.origin + "/admin",
+      shouldCreateUser: false,
     },
   });
 
@@ -103,7 +110,10 @@ export async function getSession() {
   const supabase = getSupabase();
   if (!supabase) return null;
 
-  const { data: { session }, error } = await supabase.auth.getSession();
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
   if (error) throw error;
   return session;
 }
